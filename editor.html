@@ -53,9 +53,15 @@
             padding: 16px;
         }
         
+        .textarea-wrapper {
+            position: relative;
+            margin-bottom: 8px;
+        }
+        
         textarea {
             width: 100%;
             min-height: 120px;
+            max-height: 400px;
             padding: 12px;
             font-size: 1rem;
             line-height: 1.5;
@@ -63,12 +69,23 @@
             border-radius: 8px;
             resize: vertical;
             font-family: inherit;
-            margin-bottom: 12px;
+            transition: border-color 0.2s;
         }
         
         textarea:focus {
             outline: none;
             border-color: #0066cc;
+        }
+        
+        textarea.changed {
+            border-color: #f59e0b;
+        }
+        
+        .char-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 12px;
         }
         
         .action-buttons {
@@ -127,7 +144,6 @@
         .btn-utility:hover {
             background: #f0f7ff;
         }
-        
     </style>
 </head>
 <body>
@@ -137,20 +153,89 @@
         <div class="habit-card">
             <img src="images/dont-take-no.jpg" alt="Habit">
             <div class="habit-content">
-                <textarea>🙉 Don't take "No" from someone who can't give you a "Yes". Also, every no gets you one step closer to finding a yes. Persistence pays but be smart who you ask. Be persistent in pursuing your goals. If someone can't give you what you want, their "no" shouldn't stop you. Look for other options or solutions instead.</textarea>
+                <div class="textarea-wrapper">
+                    <textarea id="habitText" autofocus>🙉 Don't take "No" from someone who can't give you a "Yes". Also, every no gets you one step closer to finding a yes. Persistence pays but be smart who you ask. Be persistent in pursuing your goals. If someone can't give you what you want, their "no" shouldn't stop you. Look for other options or solutions instead.</textarea>
+                </div>
+                <div class="char-count" id="charCount">0 characters</div>
                 
                 <div class="action-buttons">
-                    <button class="btn-save" onclick="alert('Save clicked - will mark as changed & go next')">Save</button>
-                    <button class="btn-next" onclick="alert('Next clicked - skip to next habit')">Next</button>
+                    <button class="btn-save" id="btnSave" onclick="handleSave()">Save</button>
+                    <button class="btn-next" id="btnNext" onclick="handleNext()">Next</button>
                 </div>
             </div>
         </div>
         
         <div class="utility-buttons">
-            <button class="btn-utility" onclick="alert('Download changes clicked')">Download Changes</button>
-            <button class="btn-utility" onclick="alert('Import progress clicked')">Import Progress</button>
+            <button class="btn-utility" onclick="handleDownload()">Download Changes</button>
+            <button class="btn-utility" onclick="handleImport()">Import Progress</button>
         </div>
     </div>
+
+    <script>
+        const textarea = document.getElementById('habitText');
+        const charCount = document.getElementById('charCount');
+        let originalText = textarea.value;
+        
+        // Auto-resize textarea
+        function autoResize() {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 400) + 'px';
+        }
+        
+        // Update character count
+        function updateCharCount() {
+            const count = textarea.value.length;
+            charCount.textContent = `${count} characters`;
+        }
+        
+        // Track changes
+        textarea.addEventListener('input', function() {
+            autoResize();
+            updateCharCount();
+            
+            // Visual feedback if changed
+            if (textarea.value !== originalText) {
+                textarea.classList.add('changed');
+            } else {
+                textarea.classList.remove('changed');
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Cmd/Ctrl + S = Save
+            if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                e.preventDefault();
+                handleSave();
+            }
+            // Cmd/Ctrl + Enter = Next
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleNext();
+            }
+        });
+        
+        // Button handlers
+        function handleSave() {
+            alert('Save: Text changed, saving & moving to next');
+        }
+        
+        function handleNext() {
+            alert('Next: No changes, skipping to next habit');
+        }
+        
+        function handleDownload() {
+            alert('Download: Export all changes as JSON');
+        }
+        
+        function handleImport() {
+            alert('Import: Upload progress file to resume');
+        }
+        
+        // Initialize
+        autoResize();
+        updateCharCount();
+        textarea.focus();
+    </script>
 </body>
 </html>
-<!-- Updated: 1770828879 -->
