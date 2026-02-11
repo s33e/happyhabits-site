@@ -21,7 +21,7 @@
         .grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 24px;
+            gap: 40px;
             max-width: 800px;
             margin: 0 auto;
         }
@@ -31,12 +31,6 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         }
         
         .card img {
@@ -48,65 +42,59 @@
         }
         
         .card-content {
-            padding: 20px;
+            padding: 30px;
         }
         
-        .card-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 12px;
+        .card-headline {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 15px;
+            line-height: 1.3;
         }
         
-        .card-description {
-            color: #666;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-        
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+        .card-body {
+            color: #444;
+            font-size: 1.1rem;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
     <div class="grid">
         <div class="card">
-            <img src="images/stop-doing-list.jpg" alt="Stop Doing List" loading="lazy">
+            <img src="images/you-are-beautiful.jpg" alt="You Are Beautiful" loading="lazy">
             <div class="card-content">
-                <div class="card-title">Stop Doing List</div>
-                <div class="card-description">🛑 What would you stop doing...? What things would you stop doing if you knew you had only one more year to live? Or if you had all the freedom in the world? Would you stop working late nights? Would you stop being on your phone as much? Would you stop spending time with certain people? Write a list of things you would like to stop doing. Then ask yourself, what would have to happen so I could stop now?</div>
+                <div class="card-headline">🪞 Remember, you are beautiful.</div>
+                <div class="card-body">Remember that you are beautiful. We tend to be our greatest critic. Ask yourself: what is the most beautiful thing you know to be true about yourself? Before you answer, watch this three minute video. It will blow your mind Watch Now (https://www.youtube.com/watch?v=XpaOjMXyJGk)</div>
             </div>
         </div>
         <div class="card">
-            <img src="images/own-your-niche.jpg" alt="Own your niche" loading="lazy">
+            <img src="images/eliminate-number-seven.jpg" alt="Eliminate Number Seven" loading="lazy">
             <div class="card-content">
-                <div class="card-title">Own your niche</div>
-                <div class="card-description">🐾 Be a meaningful specific, not a wandering generality. Decide what is uniquely yours and grow from there. Find your niche. Only you can be you. Don’t bother trying to be someone else. Check out Kevin Kelly‘s essay 1000 true fans
-https://kk.org/thetechnium/1000-true-fans/</div>
+                <div class="card-headline">🔨 Always eliminate number seven from the options.</div>
+                <div class="card-body">When you ask people to pick a number between 1 and 10, around 80% of them will choose seven. To get a more accurate rating, remove 7 as an option. Read (3 min) The Psychology Behind The Number 7</div>
             </div>
         </div>
         <div class="card">
             <img src="images/point-ping-pong.jpg" alt="Point Ping Pong" loading="lazy">
             <div class="card-content">
-                <div class="card-title">Point Ping Pong</div>
-                <div class="card-description">🏓 Stop unproductive point ping pong. Unproductive arguments are like ping pong. Hitting facts back and forth, hoping to win. For productive arguments, move away from making points and winning. Rather, focus on understanding the other person.</div>
+                <div class="card-headline">🏓 Stop unproductive point ping pong.</div>
+                <div class="card-body">Unproductive arguments are like ping pong. Hitting facts back and forth, hoping to win. For productive arguments, move away from making points and winning. Rather, focus on understanding the other person.</div>
             </div>
         </div>
         <div class="card">
-            <img src="images/bad-before-good.jpg" alt="Bad Before Good" loading="lazy">
+            <img src="images/100-nos.jpg" alt="100 No‘s" loading="lazy">
             <div class="card-content">
-                <div class="card-title">Bad Before Good</div>
-                <div class="card-description">😶</div>
+                <div class="card-headline">🤷 No only means no.</div>
+                <div class="card-body">Not more, not less. Reduce fear of rejection by normalising No. Try getting 100 nos either different ones or the same one with different people . First No - go to Starbucks and ask for a free coffee . Use rejection theory to overcome fear and doubt. Sometimes, just ask why https://m.youtube.com/watch?v=-vZXgApsPCQ&feature=youtu.be</div>
             </div>
         </div>
         <div class="card">
-            <img src="images/ordinary-love.jpg" alt="Ordinary Love" loading="lazy">
+            <img src="images/beat-your-books.jpg" alt="Beat Your Books" loading="lazy">
             <div class="card-content">
-                <div class="card-title">Ordinary Love</div>
-                <div class="card-description">💕 Fall in love with the ordinary. An amazing life is built through tiny, ordinary, everyday things. Get comfortable with the ordinary, and you’ll build the life of your dreams. The quality of your life is determined by the quality of your average Tuesday afternoon.</div>
+                <div class="card-headline">📚 ...</div>
+                <div class="card-body">to get the most out of them // Read physical books. And read them intensely. Make sure they have milage. Read with a pen in your hand. Write in it. Highlight words. Fold pages. Have it tell and share your story. Touch it, feel it, smell it. Make the book truly yours. This is how you get the most out of any book.</div>
             </div>
         </div>
     </div>
