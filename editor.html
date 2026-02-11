@@ -159,8 +159,8 @@
                 <div class="char-count" id="charCount">0 characters</div>
                 
                 <div class="action-buttons">
-                    <button class="btn-save" id="btnSave" onclick="handleSave()">Save</button>
                     <button class="btn-next" id="btnNext" onclick="handleNext()">Next</button>
+                    <button class="btn-save" id="btnSave" onclick="handleSave()">Save</button>
                 </div>
             </div>
         </div>
@@ -217,19 +217,23 @@
         
         // Button handlers
         function handleSave() {
-            alert('Save: Text changed, saving & moving to next');
+            // Save logic will go here
+            console.log('Save clicked');
         }
         
         function handleNext() {
-            alert('Next: No changes, skipping to next habit');
+            // Next logic will go here
+            console.log('Next clicked');
         }
         
         function handleDownload() {
-            alert('Download: Export all changes as JSON');
+            // Download logic will go here
+            console.log('Download clicked');
         }
         
         function handleImport() {
-            alert('Import: Upload progress file to resume');
+            // Import logic will go here
+            console.log('Import clicked');
         }
         
         // Initialize
