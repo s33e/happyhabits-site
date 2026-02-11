@@ -48,12 +48,6 @@
             padding: 30px;
         }
         
-        .habit-name {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-        }
         
         textarea {
             width: 100%;
@@ -105,7 +99,6 @@
         <div class="habit-card">
             <img id="habitImage" src="" alt="">
             <div class="habit-content">
-                <div class="habit-name" id="habitName"></div>
                 <textarea id="habitText"></textarea>
                 <div class="button-container">
                     <button onclick="nextHabit()">Next</button>
@@ -121,7 +114,6 @@
         function loadHabit(index) {
             const habit = habits[index];
             document.getElementById('habitImage').src = `images/${habit.slug}.jpg`;
-            document.getElementById('habitName').textContent = habit.name;
             document.getElementById('habitText').value = habit.description;
             document.getElementById('counter').textContent = `${index + 1}/${habits.length}`;
         }
