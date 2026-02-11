@@ -25,22 +25,13 @@
         
         .progress {
             background: white;
-            padding: 12px 16px;
+            padding: 10px 16px;
             border-radius: 8px;
             margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .progress-main {
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 0.95rem;
             color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .progress-detail {
-            font-size: 0.9rem;
-            color: #666;
+            font-weight: 500;
         }
         
         .habit-card {
@@ -101,15 +92,6 @@
             transform: scale(0.98);
         }
         
-        .btn-confirm {
-            background: #6b7280;
-            color: white;
-        }
-        
-        .btn-confirm:hover {
-            background: #4b5563;
-        }
-        
         .btn-save {
             background: #10b981;
             color: white;
@@ -117,6 +99,15 @@
         
         .btn-save:hover {
             background: #059669;
+        }
+        
+        .btn-next {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-next:hover {
+            background: #2563eb;
         }
         
         .utility-buttons {
@@ -146,10 +137,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="progress">
-            <div class="progress-main">5/559</div>
-            <div class="progress-detail">Changed: 3 | Reviewed: 200 | Remaining: 356</div>
-        </div>
+        <div class="progress">5/559 | Changed: 3 | Reviewed: 200 | Remaining: 356</div>
         
         <div class="habit-card">
             <img src="images/dont-take-no.jpg" alt="Habit">
@@ -157,8 +145,8 @@
                 <textarea>🙉 Don't take "No" from someone who can't give you a "Yes". Also, every no gets you one step closer to finding a yes. Persistence pays but be smart who you ask. Be persistent in pursuing your goals. If someone can't give you what you want, their "no" shouldn't stop you. Look for other options or solutions instead.</textarea>
                 
                 <div class="action-buttons">
-                    <button class="btn-confirm" onclick="alert('Confirm clicked - will mark as reviewed')">Confirm & Next</button>
-                    <button class="btn-save" onclick="alert('Save clicked - will mark as changed')">Save & Next</button>
+                    <button class="btn-save" onclick="alert('Save clicked - will mark as changed & go next')">Save</button>
+                    <button class="btn-next" onclick="alert('Next clicked - skip to next habit')">Next</button>
                 </div>
             </div>
         </div>
