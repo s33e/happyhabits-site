@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Editor Pro v3.2</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; padding: 12px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* Token Gate */
+        #token-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 20px; padding: 20px; text-align: center; }
+        #token-gate input { padding: 12px 20px; border-radius: 8px; border: 2px solid #ddd; font-size: 1rem; width: 100%; max-width: 400px; }
+        #token-gate button { padding: 12px 30px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .gate-info { max-width: 400px; color: #666; font-size: 0.9rem; }
+
+        /* Progress */
+        .progress { background: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.95rem; color: #333; font-weight: 500; }
+        
+        /* Card */
+        .habit-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 12px; display: none; }
+        .habit-card img { width: 100%; max-height: 300px; object-fit: cover; display: block; background: #eee; }
+        .habit-content { padding: 16px; }
+        
+        textarea { width: 100%; min-height: 250px; max-height: 500px; padding: 12px; font-size: 1rem; line-height: 1.5; border: 2px solid #ddd; border-radius: 8px; resize: vertical; font-family: inherit; margin-bottom: 8px; }
+        textarea:focus { outline: none; border-color: #0066cc; }
+        textarea.changed { border-color: #f59e0b; }
+        
+        .char-count { text-align: right; font-size: 0.85rem; color: #666; margin-bottom: 12px; }
+        
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        button.action { padding: 16px 20px; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; border: none; color: white; transition: opacity 0.2s; }
+        button.action:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-next { background: #3b82f6; }
+        .btn-save { background: #10b981; }
+        
+        /* Status message */
+        #status-msg { text-align: center; font-size: 0.9rem; margin-top: 10px; font-weight: 500; }
+        .msg-info { color: #666; }
+        .msg-success { color: #059669; }
+        .msg-error { color: #dc2626; }
+        .msg-loading { color: #3b82f6; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="token-gate">
+        <h2>GitHub Access Required</h2>
+        <div class="gate-info">Your GitHub token was automatically revoked because I committed it to a public repo (my mistake). Please paste your <b>Personal Access Token</b> below to resume. It will be stored safely in your browser's memory only.</div>
+        <input type="password" id="token-input" placeholder="ghp_..." autofocus>
+        <button onclick="handleToken()">Start Reviewing</button>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <div class="progress" id="progress-bar">Initializing...</div>
+        
+        <div class="habit-card" id="habit-card">
+            <img id="habit-img" src="" alt="Habit">
+            <div class="habit-content">
+                <div class="textarea-wrapper">
+                    <textarea id="habit-text" placeholder="Loading text..." autofocus></textarea>
+                </div>
+                <div class="char-count" id="char-count">0 characters</div>
+                
+                <div class="action-buttons">
+                    <button class="action btn-next" id="btn-next" onclick="nextHabit()">Next</button>
+                    <button class="action btn-save" id="btn-save" onclick="saveHabit()">Save</button>
+                </div>
+                <div id="status-msg" class="msg-info"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const REPO = 's33e/happyhabits-site';
+        const CSV_PATH = 'habits.csv';
+        const PROGRESS_PATH = 'progress.json';
+
+        let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
+        let habits = [];
+        let currentIndex = 0;
+        let reviewedCount = 0;
+        let csvSha = '';
+        let progressSha = '';
+        let originalText = '';
+
+        const el = {
+            gate: document.getElementById('token-gate'),
+            tokenInput: document.getElementById('token-input'),
+            main: document.getElementById('main-content'),
+            card: document.getElementById('habit-card'),
+            progress: document.getElementById('progress-bar'),
+            img: id('habit-img'),
+            text: id('habit-text'),
+            char: id('char-count'),
+            msg: id('status-msg'),
+            btnNext: id('btn-next'),
+            btnSave: id('btn-save')
+        };
+
+        function id(name) { return document.getElementById(name); }
+
+        function handleToken() {
+            const val = el.tokenInput.value.trim();
+            if (val.startsWith('ghp_')) {
+                GITHUB_TOKEN = val;
+                localStorage.setItem('gh_token', val);
+                el.gate.classList.add('hidden');
+                el.main.style.display = 'block';
+                init();
+            } else {
+                alert('Invalid token format. Should start with ghp_');
+            }
+        }
+
+        async function init() {
+            if (!GITHUB_TOKEN) {
+                el.gate.classList.remove('hidden');
+                return;
+            }
+            el.gate.classList.add('hidden');
+            el.main.style.display = 'block';
+
+            try {
+                showStatus('Fetching latest data...', 'loading');
+                
+                // Fetch progress first
+                const progData = await fetchGitHubFile(PROGRESS_PATH);
+                if (progData) {
+                    const p = JSON.parse(decodeURIComponent(escape(atob(progData.content))));
+                    currentIndex = p.currentIndex || 0;
+                    reviewedCount = p.reviewedCount || 0;
+                    progressSha = progData.sha;
+                }
+
+                // Fetch CSV
+                const csvData = await fetchGitHubFile(CSV_PATH);
+                if (!csvData) throw new Error('Could not find habits.csv');
+                
+                csvSha = csvData.sha;
+                const rawCsv = decodeURIComponent(escape(atob(csvData.content)));
+                
+                const parsed = Papa.parse(rawCsv, { header: true, skipEmptyLines: true });
+                habits = parsed.data;
+
+                loadHabit(currentIndex);
+                el.card.style.display = 'block';
+                showStatus('v3.2 - Ready', 'info');
+                
+            } catch (err) {
+                console.error(err);
+                if (err.message.includes('401')) {
+                    showStatus('Unauthorized - Token invalid or revoked', 'error');
+                    localStorage.removeItem('gh_token');
+                    el.gate.classList.remove('hidden');
+                } else {
+                    showStatus('Error: ' + err.message, 'error');
+                }
+            }
+        }
+
+        function loadHabit(index) {
+            if (index >= habits.length) {
+                showStatus('All habits completed!', 'success');
+                el.card.style.display = 'none';
+                return;
+            }
+
+            const habit = habits[index];
+            el.img.src = `images/${habit.slug}.jpg`;
+            el.text.value = habit.description;
+            originalText = habit.description;
+            
+            updateUI();
+            el.text.focus();
+            el.text.classList.remove('changed');
+        }
+
+        function updateUI() {
+            el.progress.textContent = `${currentIndex + 1}/${habits.length} | Reviewed: ${reviewedCount}`;
+            el.char.textContent = `${el.text.value.length} characters`;
+        }
+
+        async function nextHabit() {
+            reviewedCount++;
+            currentIndex++;
+            await syncProgress();
+            loadHabit(currentIndex);
+        }
+
+        async function saveHabit() {
+            const newText = el.text.value.trim();
+            if (newText === originalText) {
+                return nextHabit();
+            }
+
+            showStatus('Saving change...', 'loading');
+            setButtonsDisabled(true);
+
+            try {
+                habits[currentIndex].description = newText;
+                const updatedCsv = Papa.unparse(habits);
+                
+                const res = await updateGitHubFile(CSV_PATH, updatedCsv, csvSha, `Update habit: ${habits[currentIndex].slug}`);
+                csvSha = res.content.sha;
+                
+                reviewedCount++;
+                currentIndex++;
+                await syncProgress();
+                
+                loadHabit(currentIndex);
+                showStatus('Saved successfully', 'success');
+            } catch (err) {
+                showStatus('Save failed: ' + err.message, 'error');
+            } finally {
+                setButtonsDisabled(false);
+            }
+        }
+
+        async function syncProgress() {
+            const data = JSON.stringify({ currentIndex, reviewedCount });
+            try {
+                const res = await updateGitHubFile(PROGRESS_PATH, data, progressSha, 'Update progress');
+                progressSha = res.content.sha;
+            } catch (err) {
+                console.warn('Progress sync failed', err);
+            }
+        }
+
+        async function fetchGitHubFile(path) {
+            const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (res.status === 404) return null;
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            return await res.json();
+        }
+
+        async function updateGitHubFile(path, content, sha, message) {
+            const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message,
+                    content: btoa(unescape(encodeURIComponent(content))),
+                    sha
+                })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message);
+            }
+            return await res.json();
+        }
+
+        function showStatus(text, type) {
+            el.msg.textContent = text;
+            el.msg.className = 'msg-' + type;
+        }
+
+        function setButtonsDisabled(disabled) {
+            el.btnNext.disabled = disabled;
+            el.btnSave.disabled = disabled;
+        }
+
+        el.text.oninput = () => {
+            updateUI();
+            if (el.text.value !== originalText) el.text.classList.add('changed');
+            else el.text.classList.remove('changed');
+        };
+
+        window.onkeydown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveHabit(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); nextHabit(); }
+        };
+
+        window.onload = init;
+    </script>
+</body>
+</html>
