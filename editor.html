@@ -3,243 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habit Editor</title>
+    <title>Habit Editor Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; padding: 12px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
         
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f5f5;
-            padding: 12px;
-            line-height: 1.6;
-        }
+        /* Auth */
+        #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 20px; }
+        #auth-gate input { padding: 12px 20px; border-radius: 8px; border: 2px solid #ddd; font-size: 1.1rem; text-align: center; }
+        #auth-gate button { padding: 12px 30px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* Progress */
+        .progress { background: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.95rem; color: #333; font-weight: 500; }
         
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        /* Card */
+        .habit-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 12px; display: none; }
+        .habit-card img { width: 100%; max-height: 300px; object-fit: cover; display: block; background: #eee; }
+        .habit-content { padding: 16px; }
         
-        .progress {
-            background: white;
-            padding: 10px 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            font-size: 0.95rem;
-            color: #333;
-            font-weight: 500;
-        }
+        textarea { width: 100%; min-height: 120px; max-height: 400px; padding: 12px; font-size: 1rem; line-height: 1.5; border: 2px solid #ddd; border-radius: 8px; resize: vertical; font-family: inherit; margin-bottom: 8px; }
+        textarea:focus { outline: none; border-color: #0066cc; }
+        textarea.changed { border-color: #f59e0b; }
         
-        .habit-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 12px;
-        }
+        .char-count { text-align: right; font-size: 0.85rem; color: #666; margin-bottom: 12px; }
         
-        .habit-card img {
-            width: 100%;
-            max-height: 300px;
-            object-fit: cover;
-            display: block;
-        }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        button.action { padding: 16px 20px; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; border: none; color: white; transition: opacity 0.2s; }
+        button.action:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-next { background: #3b82f6; }
+        .btn-save { background: #10b981; }
         
-        .habit-content {
-            padding: 16px;
-        }
-        
-        .textarea-wrapper {
-            position: relative;
-            margin-bottom: 8px;
-        }
-        
-        textarea {
-            width: 100%;
-            min-height: 120px;
-            max-height: 400px;
-            padding: 12px;
-            font-size: 1rem;
-            line-height: 1.5;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            resize: vertical;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-        
-        textarea:focus {
-            outline: none;
-            border-color: #0066cc;
-        }
-        
-        textarea.changed {
-            border-color: #f59e0b;
-        }
-        
-        .char-count {
-            text-align: right;
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 12px;
-        }
-        
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        
-        button {
-            padding: 12px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-        }
-        
-        button:active {
-            transform: scale(0.98);
-        }
-        
-        .btn-save {
-            background: #10b981;
-            color: white;
-        }
-        
-        .btn-save:hover {
-            background: #059669;
-        }
-        
-        .btn-next {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-next:hover {
-            background: #2563eb;
-        }
-        
-        .utility-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-        
-        .btn-utility {
-            background: white;
-            color: #0066cc;
-            border: 2px solid #0066cc;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-        }
-        
-        .btn-utility:hover {
-            background: #f0f7ff;
-        }
+        /* Status message */
+        #status-msg { text-align: center; font-size: 0.9rem; margin-top: 10px; font-weight: 500; }
+        .msg-info { color: #666; }
+        .msg-success { color: #059669; }
+        .msg-error { color: #dc2626; }
+        .msg-loading { color: #3b82f6; }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="progress">5/559 | Reviewed: 200</div>
+    <div id="auth-gate">
+        <input type="password" id="pass-input" placeholder="Password" autofocus>
+        <button onclick="handleAuth()">Enter</button>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <div class="progress" id="progress-bar">Loading data...</div>
         
-        <div class="habit-card">
-            <img src="images/dont-take-no.jpg" alt="Habit">
+        <div class="habit-card" id="habit-card">
+            <img id="habit-img" src="" alt="Habit">
             <div class="habit-content">
-                <div class="textarea-wrapper">
-                    <textarea id="habitText" autofocus>🙉 Don't take "No" from someone who can't give you a "Yes". Also, every no gets you one step closer to finding a yes. Persistence pays but be smart who you ask. Be persistent in pursuing your goals. If someone can't give you what you want, their "no" shouldn't stop you. Look for other options or solutions instead.</textarea>
-                </div>
-                <div class="char-count" id="charCount">0 characters</div>
+                <textarea id="habit-text" placeholder="Loading text..."></textarea>
+                <div class="char-count" id="char-count">0 characters</div>
                 
                 <div class="action-buttons">
-                    <button class="btn-next" id="btnNext" onclick="handleNext()">Next</button>
-                    <button class="btn-save" id="btnSave" onclick="handleSave()">Save</button>
+                    <button class="action btn-next" id="btn-next" onclick="nextHabit()">Next</button>
+                    <button class="action btn-save" id="btn-save" onclick="saveHabit()">Save</button>
                 </div>
+                <div id="status-msg" class="msg-info"></div>
             </div>
-        </div>
-        
-        <div class="utility-buttons">
-            <button class="btn-utility" onclick="handleDownload()">Download Changes</button>
-            <button class="btn-utility" onclick="handleImport()">Import Progress</button>
         </div>
     </div>
 
     <script>
-        const textarea = document.getElementById('habitText');
-        const charCount = document.getElementById('charCount');
-        let originalText = textarea.value;
-        
-        // Auto-resize textarea
-        function autoResize() {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 400) + 'px';
-        }
-        
-        // Update character count
-        function updateCharCount() {
-            const count = textarea.value.length;
-            charCount.textContent = `${count} characters`;
-        }
-        
-        // Track changes
-        textarea.addEventListener('input', function() {
-            autoResize();
-            updateCharCount();
-            
-            // Visual feedback if changed
-            if (textarea.value !== originalText) {
-                textarea.classList.add('changed');
+        // CONFIG - Injected by Alfred
+        const GITHUB_TOKEN = 'ghp_IdmVcroIhg6FC0OJUqYLZvwjQJX7Mt1LB08a';
+        const REPO = 's33e/happyhabits-site';
+        const CSV_PATH = 'habits.csv';
+        const PROGRESS_PATH = 'progress.json';
+
+        let habits = [];
+        let currentIndex = 0;
+        let reviewedCount = 0;
+        let csvSha = '';
+        let progressSha = '';
+        let originalText = '';
+
+        const el = {
+            auth: document.getElementById('auth-gate'),
+            pass: document.getElementById('pass-input'),
+            main: document.getElementById('main-content'),
+            card: document.getElementById('habit-card'),
+            progress: document.getElementById('progress-bar'),
+            img: id('habit-img'),
+            text: id('habit-text'),
+            char: id('char-count'),
+            msg: id('status-msg'),
+            btnNext: id('btn-next'),
+            btnSave: id('btn-save')
+        };
+
+        function id(name) { return document.getElementById(name); }
+
+        function handleAuth() {
+            if (el.pass.value.toLowerCase() === 'kian') {
+                el.auth.style.display = 'none';
+                el.main.style.display = 'block';
+                init();
             } else {
-                textarea.classList.remove('changed');
+                alert('Wrong password');
             }
-        });
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Cmd/Ctrl + S = Save
-            if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-                e.preventDefault();
-                handleSave();
+        }
+
+        async function init() {
+            try {
+                showStatus('Loading database...', 'loading');
+                
+                // Fetch progress first
+                const progData = await fetchGitHubFile(PROGRESS_PATH);
+                if (progData) {
+                    const p = JSON.parse(atob(progData.content));
+                    currentIndex = p.currentIndex || 0;
+                    reviewedCount = p.reviewedCount || 0;
+                    progressSha = progData.sha;
+                }
+
+                // Fetch CSV
+                const csvData = await fetchGitHubFile(CSV_PATH);
+                if (!csvData) throw new Error('Could not find habits.csv');
+                
+                csvSha = csvData.sha;
+                const rawCsv = atob(csvData.content);
+                
+                const parsed = Papa.parse(rawCsv, { header: true, skipEmptyLines: true });
+                habits = parsed.data;
+
+                // Load first habit
+                loadHabit(currentIndex);
+                el.card.style.display = 'block';
+                showStatus('Ready', 'info');
+                
+            } catch (err) {
+                console.error(err);
+                showStatus('Error loading data: ' + err.message, 'error');
             }
-            // Cmd/Ctrl + Enter = Next
-            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                e.preventDefault();
-                handleNext();
+        }
+
+        function loadHabit(index) {
+            if (index >= habits.length) {
+                showStatus('All habits completed!', 'success');
+                el.card.style.display = 'none';
+                return;
             }
-        });
-        
-        // Button handlers
-        function handleSave() {
-            // Save logic will go here
-            console.log('Save clicked');
+
+            const habit = habits[index];
+            el.img.src = `images/${habit.slug}.jpg`;
+            el.text.value = habit.description;
+            originalText = habit.description;
+            
+            updateUI();
+            el.text.focus();
+            el.text.classList.remove('changed');
         }
-        
-        function handleNext() {
-            // Next logic will go here
-            console.log('Next clicked');
+
+        function updateUI() {
+            el.progress.textContent = `${currentIndex + 1}/${habits.length} | Reviewed: ${reviewedCount}`;
+            el.char.textContent = `${el.text.value.length} characters`;
         }
-        
-        function handleDownload() {
-            // Download logic will go here
-            console.log('Download clicked');
+
+        async function nextHabit() {
+            reviewedCount++;
+            currentIndex++;
+            await syncProgress();
+            loadHabit(currentIndex);
         }
-        
-        function handleImport() {
-            // Import logic will go here
-            console.log('Import clicked');
+
+        async function saveHabit() {
+            const newText = el.text.value.trim();
+            if (newText === originalText) {
+                return nextHabit();
+            }
+
+            showStatus('Saving change...', 'loading');
+            setButtonsDisabled(true);
+
+            try {
+                // Update local array
+                habits[currentIndex].description = newText;
+                
+                // Generate new CSV
+                const updatedCsv = Papa.unparse(habits);
+                
+                // Push to GitHub
+                const res = await updateGitHubFile(CSV_PATH, updatedCsv, csvSha, `Update habit: ${habits[currentIndex].slug}`);
+                csvSha = res.content.sha;
+                
+                // Increment and sync progress
+                reviewedCount++;
+                currentIndex++;
+                await syncProgress();
+                
+                loadHabit(currentIndex);
+                showStatus('Saved successfully', 'success');
+            } catch (err) {
+                showStatus('Save failed: ' + err.message, 'error');
+            } finally {
+                setButtonsDisabled(false);
+            }
         }
-        
-        // Initialize
-        autoResize();
-        updateCharCount();
-        textarea.focus();
+
+        async function syncProgress() {
+            const data = JSON.stringify({ currentIndex, reviewedCount });
+            try {
+                const res = await updateGitHubFile(PROGRESS_PATH, data, progressSha, 'Update progress');
+                progressSha = res.content.sha;
+            } catch (err) {
+                console.warn('Progress sync failed', err);
+            }
+        }
+
+        // GitHub API helpers
+        async function fetchGitHubFile(path) {
+            const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (res.status === 404) return null;
+            return await res.json();
+        }
+
+        async function updateGitHubFile(path, content, sha, message) {
+            const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message,
+                    content: btoa(unescape(encodeURIComponent(content))),
+                    sha
+                })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message);
+            }
+            return await res.json();
+        }
+
+        function showStatus(text, type) {
+            el.msg.textContent = text;
+            el.msg.className = 'msg-' + type;
+        }
+
+        function setButtonsDisabled(disabled) {
+            el.btnNext.disabled = disabled;
+            el.btnSave.disabled = disabled;
+        }
+
+        // Listeners
+        el.text.oninput = () => {
+            updateUI();
+            if (el.text.value !== originalText) el.text.classList.add('changed');
+            else el.text.classList.remove('changed');
+        };
+
+        window.onkeydown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveHabit(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); nextHabit(); }
+        };
+
+        // Keyboard ENTER for auth
+        el.pass.onkeyup = (e) => { if (e.key === 'Enter') handleAuth(); };
     </script>
 </body>
 </html>
