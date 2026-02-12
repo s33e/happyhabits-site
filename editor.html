@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habit Editor Pro</title>
+    <title>Habit Editor Pro v3.1</title>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; padding: 12px; line-height: 1.6; }
         .container { max-width: 800px; margin: 0 auto; }
         
-        .hidden { display: none !important; }
+        /* Token Gate */
+        #token-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 20px; padding: 20px; text-align: center; }
+        #token-gate input { padding: 12px 20px; border-radius: 8px; border: 2px solid #ddd; font-size: 1rem; width: 100%; max-width: 400px; }
+        #token-gate button { padding: 12px 30px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .gate-info { max-width: 400px; color: #666; font-size: 0.9rem; }
 
         /* Progress */
         .progress { background: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.95rem; color: #333; font-weight: 500; }
@@ -39,12 +43,19 @@
         .msg-error { color: #dc2626; }
         .msg-loading { color: #3b82f6; }
 
-        .hidden { display: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="container" id="main-content">
-        <div class="progress" id="progress-bar">Loading database...</div>
+    <div id="token-gate">
+        <h2>GitHub Access Required</h2>
+        <div class="gate-info">Your GitHub token was automatically revoked because I committed it to a public repo (my mistake). Please paste your <b>Personal Access Token</b> below to resume. It will be stored safely in your browser's memory only.</div>
+        <input type="password" id="token-input" placeholder="ghp_..." autofocus>
+        <button onclick="handleToken()">Start Reviewing</button>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <div class="progress" id="progress-bar">Initializing...</div>
         
         <div class="habit-card" id="habit-card">
             <img id="habit-img" src="" alt="Habit">
@@ -64,12 +75,11 @@
     </div>
 
     <script>
-        // CONFIG - Injected by Alfred
-        const GITHUB_TOKEN = 'ghp_IdmVcroIhg6FC0OJUqYLZvwjQJX7Mt1LB08a';
         const REPO = 's33e/happyhabits-site';
         const CSV_PATH = 'habits.csv';
         const PROGRESS_PATH = 'progress.json';
 
+        let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
         let habits = [];
         let currentIndex = 0;
         let reviewedCount = 0;
@@ -78,6 +88,8 @@
         let originalText = '';
 
         const el = {
+            gate: document.getElementById('token-gate'),
+            tokenInput: document.getElementById('token-input'),
             main: document.getElementById('main-content'),
             card: document.getElementById('habit-card'),
             progress: document.getElementById('progress-bar'),
@@ -91,10 +103,27 @@
 
         function id(name) { return document.getElementById(name); }
 
-        // Load data automatically
-        window.onload = init;
+        function handleToken() {
+            const val = el.tokenInput.value.trim();
+            if (val.startsWith('ghp_')) {
+                GITHUB_TOKEN = val;
+                localStorage.setItem('gh_token', val);
+                el.gate.classList.add('hidden');
+                el.main.style.display = 'block';
+                init();
+            } else {
+                alert('Invalid token format. Should start with ghp_');
+            }
+        }
 
         async function init() {
+            if (!GITHUB_TOKEN) {
+                el.gate.classList.remove('hidden');
+                return;
+            }
+            el.gate.classList.add('hidden');
+            el.main.style.display = 'block';
+
             try {
                 showStatus('Fetching latest data...', 'loading');
                 
@@ -117,14 +146,19 @@
                 const parsed = Papa.parse(rawCsv, { header: true, skipEmptyLines: true });
                 habits = parsed.data;
 
-                // Load first habit
                 loadHabit(currentIndex);
                 el.card.style.display = 'block';
-                showStatus('v3.0 - Ready', 'info');
+                showStatus('v3.1 - Ready', 'info');
                 
             } catch (err) {
                 console.error(err);
-                showStatus('Error: ' + err.message, 'error');
+                if (err.message.includes('401')) {
+                    showStatus('Unauthorized - Token invalid or revoked', 'error');
+                    localStorage.removeItem('gh_token');
+                    el.gate.classList.remove('hidden');
+                } else {
+                    showStatus('Error: ' + err.message, 'error');
+                }
             }
         }
 
@@ -167,17 +201,12 @@
             setButtonsDisabled(true);
 
             try {
-                // Update local array
                 habits[currentIndex].description = newText;
-                
-                // Generate new CSV
                 const updatedCsv = Papa.unparse(habits);
                 
-                // Push to GitHub
                 const res = await updateGitHubFile(CSV_PATH, updatedCsv, csvSha, `Update habit: ${habits[currentIndex].slug}`);
                 csvSha = res.content.sha;
                 
-                // Increment and sync progress
                 reviewedCount++;
                 currentIndex++;
                 await syncProgress();
@@ -201,12 +230,12 @@
             }
         }
 
-        // GitHub API helpers
         async function fetchGitHubFile(path) {
             const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
                 headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
             });
             if (res.status === 404) return null;
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             return await res.json();
         }
 
@@ -240,7 +269,6 @@
             el.btnSave.disabled = disabled;
         }
 
-        // Listeners
         el.text.oninput = () => {
             updateUI();
             if (el.text.value !== originalText) el.text.classList.add('changed');
@@ -251,6 +279,8 @@
             if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveHabit(); }
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); nextHabit(); }
         };
+
+        window.onload = init;
     </script>
 </body>
 </html>
