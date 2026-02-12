@@ -10,10 +10,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; padding: 12px; line-height: 1.6; }
         .container { max-width: 800px; margin: 0 auto; }
         
-        /* Auth */
-        #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 20px; display: flex !important; }
-        #auth-gate.hidden { display: none !important; }
-        #auth-gate button { padding: 12px 30px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .hidden { display: none !important; }
 
         /* Progress */
         .progress { background: white; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.95rem; color: #333; font-weight: 500; }
@@ -46,18 +43,15 @@
     </style>
 </head>
 <body>
-    <div id="auth-gate">
-        <input type="password" id="pass-input" placeholder="Password" autofocus>
-        <button onclick="handleAuth()">Enter</button>
-    </div>
-
-    <div class="container" id="main-content" style="display: none;">
-        <div class="progress" id="progress-bar">Loading data...</div>
+    <div class="container" id="main-content">
+        <div class="progress" id="progress-bar">Loading database...</div>
         
         <div class="habit-card" id="habit-card">
             <img id="habit-img" src="" alt="Habit">
             <div class="habit-content">
-                <textarea id="habit-text" placeholder="Loading text..."></textarea>
+                <div class="textarea-wrapper">
+                    <textarea id="habit-text" placeholder="Loading text..." autofocus></textarea>
+                </div>
                 <div class="char-count" id="char-count">0 characters</div>
                 
                 <div class="action-buttons">
@@ -84,8 +78,6 @@
         let originalText = '';
 
         const el = {
-            auth: document.getElementById('auth-gate'),
-            pass: document.getElementById('pass-input'),
             main: document.getElementById('main-content'),
             card: document.getElementById('habit-card'),
             progress: document.getElementById('progress-bar'),
@@ -99,19 +91,12 @@
 
         function id(name) { return document.getElementById(name); }
 
-        function handleAuth() {
-            if (el.pass.value.toLowerCase() === 'kian') {
-                el.auth.classList.add('hidden');
-                el.main.style.display = 'block';
-                init();
-            } else {
-                alert('Wrong password');
-            }
-        }
+        // Load data automatically
+        window.onload = init;
 
         async function init() {
             try {
-                showStatus('Loading database...', 'loading');
+                showStatus('Fetching latest data...', 'loading');
                 
                 // Fetch progress first
                 const progData = await fetchGitHubFile(PROGRESS_PATH);
@@ -127,7 +112,7 @@
                 if (!csvData) throw new Error('Could not find habits.csv');
                 
                 csvSha = csvData.sha;
-                const rawCsv = atob(csvData.content);
+                const rawCsv = decodeURIComponent(escape(atob(csvData.content)));
                 
                 const parsed = Papa.parse(rawCsv, { header: true, skipEmptyLines: true });
                 habits = parsed.data;
@@ -139,7 +124,7 @@
                 
             } catch (err) {
                 console.error(err);
-                showStatus('Error loading data: ' + err.message, 'error');
+                showStatus('Error: ' + err.message, 'error');
             }
         }
 
