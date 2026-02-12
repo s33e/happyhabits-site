@@ -11,8 +11,8 @@
         .container { max-width: 800px; margin: 0 auto; }
         
         /* Auth */
-        #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 20px; }
-        #auth-gate input { padding: 12px 20px; border-radius: 8px; border: 2px solid #ddd; font-size: 1.1rem; text-align: center; }
+        #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 20px; display: flex !important; }
+        #auth-gate.hidden { display: none !important; }
         #auth-gate button { padding: 12px 30px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
 
         /* Progress */
@@ -101,7 +101,7 @@
 
         function handleAuth() {
             if (el.pass.value.toLowerCase() === 'kian') {
-                el.auth.style.display = 'none';
+                el.auth.classList.add('hidden');
                 el.main.style.display = 'block';
                 init();
             } else {
