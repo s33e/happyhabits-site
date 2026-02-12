@@ -101,7 +101,7 @@
                 // Fetch progress first
                 const progData = await fetchGitHubFile(PROGRESS_PATH);
                 if (progData) {
-                    const p = JSON.parse(atob(progData.content));
+                    const p = JSON.parse(decodeURIComponent(escape(atob(progData.content))));
                     currentIndex = p.currentIndex || 0;
                     reviewedCount = p.reviewedCount || 0;
                     progressSha = progData.sha;
@@ -120,7 +120,7 @@
                 // Load first habit
                 loadHabit(currentIndex);
                 el.card.style.display = 'block';
-                showStatus('Ready', 'info');
+                showStatus('v3.0 - Ready', 'info');
                 
             } catch (err) {
                 console.error(err);
@@ -251,9 +251,6 @@
             if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveHabit(); }
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); nextHabit(); }
         };
-
-        // Keyboard ENTER for auth
-        el.pass.onkeyup = (e) => { if (e.key === 'Enter') handleAuth(); };
     </script>
 </body>
 </html>
